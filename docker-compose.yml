@@ -1,0 +1,53 @@
+version: '3'
+
+networks:
+  blog_noticias_net:
+    ipam:
+      config:
+        - subnet: 172.56.0.0/24
+
+services:
+  nexus:
+    image: sonatype/nexus3:latest
+    ports:
+    - "8081:8081"
+    - "8082:8082"
+    restart: always
+    volumes:
+    - ./nexus_data:/nexus-data
+    networks:
+      blog_noticias_net:
+        ipv4_address: 172.56.0.10
+    environment:
+      TZ: America/Bogota
+  web:
+    image: nginx:latest
+    ports:
+    - "80:80"
+    mem_limit: 1024m
+    restart: always
+    volumes:
+    - ./public_html:/public_html
+    - ./conf_d:/etc/nginx/conf.d
+    - ./log:/var/log/nginx/
+    networks:
+      blog_noticias_net:
+        ipv4_address: 172.56.0.11
+    environment:
+      TZ: America/Bogota
+  jenkis:
+    image: jenkins/jenkins:lts
+    restart: always
+    ports:
+    - "8080:8080"
+    - "5050:50000"
+    volumes:
+    - ./jenkins_home:/var/jenkins_home
+    - ./public_hmtl:/public_hmtl
+    networks:
+      blog_noticias_net:
+        ipv4_address: 172.56.0.12
+    environment:
+      TZ: America/Bogota
+    links:
+      - nexus
